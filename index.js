@@ -1,12 +1,11 @@
 const express=require("express");
-const ejs=require("ejs"); 
+const ejs=require("ejs"); //using ejs as view engine
 const path=require("path");
 const fs=require('fs');
 const { fileURLToPath } = require("url");
 //Creating our server
 const app=express();
-
-app.use(express.json());
+app.use(express.json()); //this automatically convert response send to json
 
 //Setting up EJS
 app.set("view engine","ejs")
@@ -22,7 +21,6 @@ const PORT=process.env.PORT || 3000;
 app.get("/",(req,res)=>{
   res.render("index");
 });
-
 
 app.get("/search",(req,res)=>{
   const query=req.query;
@@ -42,7 +40,7 @@ app.get("/search",(req,res)=>{
       else freq[u[i]]=1;
   }
   let n=0;
-  let kk=0;
+  let query_mag=0;
   let idfsize=Object.keys(idf).length;
   var idx=new Array(Object.keys(u).length).fill(-1);
   for(let i=0;i<usize;i++){
@@ -51,13 +49,13 @@ app.get("/search",(req,res)=>{
          idx[i]=j;
          n+=1;
          ans[j]=(parseFloat(idf[j]*freq[u[i]]))
-         kk+=(ans[j]*ans[j])
+         query_mag+=(ans[j]*ans[j])
        }
      }
   }
-  kk/=n;
-  kk/=n;
-  kk=Math.sqrt(kk)
+  query_mag/=n;
+  query_mag/=n;
+  query_mag=Math.sqrt(query_mag)
   for(let j=0;j<idfsize;j++){
     ans[j]/=n;
   }
@@ -67,7 +65,6 @@ app.get("/search",(req,res)=>{
   }
   for(let i=0;i+2<137586;i+=3){
      arr[parseInt(tfidf[i])-1][parseInt(tfidf[i+1])-1]=parseFloat(tfidf[i+2])
-    
   }
   var dotprod=new Array(3373);
   for(let i=0;i<3373;i++){
@@ -77,12 +74,13 @@ app.get("/search",(req,res)=>{
     for(let j=0;j<usize;j++){
       if(idx[j]!=-1){
         dotprod[i][0]+=(arr[idx[j]][i]*ans[idx[j]])
-        if(kk>0)dotprod[i][0]/=(kk*parseFloat(mag[i]));
       }
    }
+   if(query_mag>0)dotprod[i][0]/=(query_mag*parseFloat(mag[i]));
   }
   
   dotprod.sort((a,b)=>b[0]-a[0]);
+
    var tt=fs.readFileSync("./Data/problem_title.txt").toString().split('\n')
    var ads=fs.readFileSync("./Data/problem_url.txt").toString().split('\n')
   
